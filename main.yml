@@ -1,0 +1,104 @@
+---
+- name: Install wildfly
+  hosts: all
+  become: true
+  roles:
+    - wildfly
+
+
+- name: Configure a Wildfly master node
+  hosts: master
+  become: true
+  tasks:
+    - name: add the admin user
+      lineinfile:
+        path: /opt/wildfly-14.0.1.Final/domain/configuration/mgmt-users.properties
+        regexp: 'admin='
+        line: 'admin=f1d0f415bbace6b649271f3483fe8b1b'
+
+    - name: copy the host-master xml config
+      template:
+        src: templates/host-master.xml
+        dest: /opt/wildfly-14.0.1.Final/domain/configuration/
+
+    - name: copy the domain xml config
+      template:
+        src: templates/domain.xml
+        dest: /opt/wildfly-14.0.1.Final/domain/configuration/
+
+    - name: copy the wildfly config to /etc/default/
+      template:
+        src: templates/wildfly
+        dest: /etc/default/
+
+ 
+- name: Configure a Wildfly slaves nodes
+  hosts: slaves
+  become: true
+  vars:
+    master_ip: "192.168.102.249"
+  tasks:
+    - name: add the admin user
+      lineinfile:
+        path: /opt/wildfly-14.0.1.Final/domain/configuration/mgmt-users.properties
+        regexp: 'admin='
+        line: 'admin=f1d0f415bbace6b649271f3483fe8b1b'
+
+    - name: copy the host-slave xml config
+      template:
+        src: templates/host-slave.xml
+        dest: /opt/wildfly-14.0.1.Final/domain/configuration/
+
+    - name: copy the wildfly config to /etc/default/
+      template:
+        src: templates/wildfly
+        dest: /etc/default/
+
+- name: Start the Wildfly cluster
+  hosts: nodo1:nodo2:nodo3
+  become: true
+  serial: 1
+  #strategy: linear
+  tasks:
+    - name: start wildfly service
+      service:
+        name: wildfly
+        state: started
+
+- name: Configure a Wildfly domain mode
+  hosts: master
+  become: true
+  tasks:
+    - name: Copy the jboss cli commands
+      template:
+        src: templates/batch.cli.j2
+        dest: /tmp/batch.cli
+
+    - name: Run the cli command for proxy configuration
+      template:
+        src: templates/proxy_config.cli.j2
+        dest: /tmp/proxy.cli
+
+    - name: Wait for the full cluster to start
+      pause:
+        seconds: 10
+
+    - name: Configure server and groups
+      shell: "./jboss-cli.sh -c --controller={{ ansible_facts.default_ipv4.address }}:9990 --file=/tmp/batch.cli"
+      args:
+        chdir: "/opt/wildfly-14.0.1.Final/bin"
+      ignore_errors: true
+
+    - name: Configure proxy
+      shell: "./jboss-cli.sh -c --controller={{ ansible_facts.default_ipv4.address }}:9990 --file=/tmp/proxy.cli"
+      args:
+        chdir: "/opt/wildfly-14.0.1.Final/bin"
+      ignore_errors: true
+
+    - name: Clean up
+      file:
+        path: /tmp/{{ item }}
+        state: absent
+      loop:
+        - batch.cli
+        - proxy.cli

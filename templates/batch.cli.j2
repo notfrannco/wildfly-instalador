@@ -1,0 +1,8 @@
+/host=nodo-1/server-config=api-server-1:add(auto-start=true,group=api-server-group,socket-binding-port-offset=0)
+/host=nodo-2/server-config=api-server-2:add(auto-start=true,group=api-server-group,socket-binding-port-offset=0)
+
+/host=nodo-1/server-config=servicios-server-1:add(auto-start=true,group=servicios-server-group,socket-binding-port-offset=100)
+/host=nodo-2/server-config=servicios-server-2:add(auto-start=true,group=servicios-server-group,socket-binding-port-offset=100)
+
+/server-group=api-server-group:start-servers(blocking=true)
+/server-group=servicios-server-group:start-servers(blocking=true)

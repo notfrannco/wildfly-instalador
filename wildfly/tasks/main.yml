@@ -1,0 +1,26 @@
+---
+# tasks file for wildfly
+
+- name: Add a System user that runs the wildfly process
+  user:
+    name: "{{ system_user }}"
+    state: present
+    system: yes
+
+- name: Copy the zip file to the remote server and unzip 
+  unarchive:
+    src: "{{ pkg_location | default('files') }}/{{ wildfly_zip }}"
+    dest: "{{ install_location }}"
+    owner: "{{ system_user }}"
+    group: "{{ system_user }}"
+
+- name: Copy the init script to /etc/init.d/
+  copy:
+    src: "{{ install_location }}{{ wildfly_zip[:-4] }}/docs/contrib/scripts/init.d/wildfly-init-redhat.sh"
+    dest: /etc/init.d/{{ service_name }}
+    mode: 0755
+    remote_src: yes
+
+- name: reload daemon
+  systemd:
+    daemon_reload: yes

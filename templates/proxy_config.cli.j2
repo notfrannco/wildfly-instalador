@@ -1,0 +1,6 @@
+/profile=default:clone(to-profile=proxy)
+/profile=proxy/subsystem=undertow/configuration=filter/mod-cluster=modcluster:add(management-socket-binding=http,advertise-socket-binding=modcluster,security-key=MyPassword)
+/profile=proxy/subsystem=undertow/server=default-server/host=default-host/filter-ref=modcluster:add
+/profile=ha/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=advertise-security-key,value=MyPassword)
+/server-group=api-server-group:reload-servers(blocking=true)
+/server-group=servicios-server-group:reload-servers(blocking=true)

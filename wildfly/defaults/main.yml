@@ -1,0 +1,6 @@
+---
+# defaults file for wildfly
+wildfly_zip: "wildfly-14.0.1.Final.zip"
+system_user: "wildfly"
+install_location: "/opt/"
+service_name: "wildfly"
