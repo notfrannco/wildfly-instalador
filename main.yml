@@ -63,6 +63,7 @@
       firewalld:
         port: "{{ item.port }}"
         permanent: yes
+        immediate: yes
         state: "{{ item.state }}"
       loop:
         - {port: '9990/tcp', state: 'enabled'}
