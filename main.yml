@@ -58,8 +58,25 @@
   hosts: nodo1:nodo2:nodo3
   become: true
   serial: 1
-  #strategy: linear
   tasks:
+    - name: Configure firewall
+      firewalld:
+        port: "{{ item.port }}"
+        permanent: yes
+        state: "{{ item.state }}"
+      loop:
+        - {port: '9990/tcp', state: 'enabled'}
+        - {port: '8080/tcp', state: 'enabled'}
+        - {port: '8180/tcp', state: 'enabled'}
+        - {port: '5601/tcp', state: 'enabled'}
+        - {port: '40918/tcp', state: 'enabled'}
+        - {port: '8109/tcp', state: 'enabled'}
+        - {port: '8009/tcp', state: 'enabled'}
+        - {port: '8543/tcp', state: 'enabled'}
+        - {port: '8443/tcp', state: 'enabled'}
+        - {port: '43161/tcp', state: 'enabled'}
+        - {port: '55200/tcp', state: 'enabled'}
+
     - name: start wildfly service
       service:
         name: wildfly
