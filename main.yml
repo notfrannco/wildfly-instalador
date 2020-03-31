@@ -59,6 +59,11 @@
   become: true
   serial: 1
   tasks:
+    - name: Start firewall
+      service:
+        name: firewalld
+        state: started 
+
     - name: Configure firewall
       firewalld:
         port: "{{ item.port }}"
